@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projetos TI | Sistemas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+        }
+        
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .sortable-ghost {
+            opacity: 0.4;
+            background-color: #f1f5f9;
+            border: 2px dashed #94a3b8;
+        }
+        .drag-over {
+            background-color: #e2e8f0; 
+            border: 2px dashed #64748b;
+        }
+        .task-card {
+            transition: transform 0.1s ease, box-shadow 0.2s ease;
+        }
+        .task-card:active {
+            transform: scale(0.98);
+        }
+        
+        .avatar-initials {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden text-slate-800">
+
+    <header class="bg-white shadow-sm border-b border-slate-200 px-6 py-4 flex justify-between items-center z-10 shrink-0">
+        <div class="flex items-center gap-3">
+            <div class="bg-blue-600 text-white p-2.5 rounded-lg shadow-sm border border-blue-700">
+                <i class="fa-solid fa-server text-xl"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold text-slate-900 leading-tight">Projetos TI | Sistemas</h1>
+                <p class="text-xs text-slate-500 font-medium">Gestão e acompanhamento de demandas</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            <button onclick="openReportsModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 px-4 py-2.5 rounded-lg font-medium transition-colors flex items-center gap-2 shadow-sm">
+                <i class="fa-solid fa-chart-pie"></i>
+                <span class="hidden sm:inline">Relatórios</span>
+            </button>
+            <button onclick="openModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg font-medium transition-colors flex items-center gap-2 shadow-sm">
+                <i class="fa-solid fa-plus"></i>
+                <span class="hidden sm:inline">Novo Projeto</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-1 overflow-x-auto overflow-y-hidden p-6 bg-slate-50">
+        <div class="flex h-full gap-6 items-start min-w-max pb-4" id="board">
+            
+            <!-- Coluna: A Fazer -->
+            <div class="kanban-column flex flex-col bg-slate-100/80 rounded-xl w-80 max-h-full border border-slate-200 shadow-sm" data-status="todo">
+                <div class="p-4 flex items-center justify-between border-b border-slate-200 shrink-0 bg-slate-100 rounded-t-xl">
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 rounded-full bg-slate-400 shadow-sm"></div>
+                        <h2 class="font-semibold text-slate-700">A Fazer</h2>
+                    </div>
+                    <span class="bg-white border border-slate-200 text-slate-600 text-xs font-bold px-2.5 py-1 rounded-full count-badge shadow-sm">0</span>
+                </div>
+                <div class="p-3 flex-1 overflow-y-auto task-container space-y-3 min-h-[150px]" id="col-todo"></div>
+            </div>
+
+            <!-- Coluna: Em Andamento -->
+            <div class="kanban-column flex flex-col bg-slate-100/80 rounded-xl w-80 max-h-full border border-slate-200 shadow-sm" data-status="inprogress">
+                <div class="p-4 flex items-center justify-between border-b border-slate-200 shrink-0 bg-slate-100 rounded-t-xl">
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 rounded-full bg-blue-500 shadow-sm"></div>
+                        <h2 class="font-semibold text-slate-700">Em Andamento</h2>
+                    </div>
+                    <span class="bg-white border border-slate-200 text-slate-600 text-xs font-bold px-2.5 py-1 rounded-full count-badge shadow-sm">0</span>
+                </div>
+                <div class="p-3 flex-1 overflow-y-auto task-container space-y-3 min-h-[150px]" id="col-inprogress"></div>
+            </div>
+
+            <!-- Coluna: Em Revisão -->
+            <div class="kanban-column flex flex-col bg-slate-100/80 rounded-xl w-80 max-h-full border border-slate-200 shadow-sm" data-status="review">
+                <div class="p-4 flex items-center justify-between border-b border-slate-200 shrink-0 bg-slate-100 rounded-t-xl">
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 rounded-full bg-purple-500 shadow-sm"></div>
+                        <h2 class="font-semibold text-slate-700">Em Revisão</h2>
+                    </div>
+                    <span class="bg-white border border-slate-200 text-slate-600 text-xs font-bold px-2.5 py-1 rounded-full count-badge shadow-sm">0</span>
+                </div>
+                <div class="p-3 flex-1 overflow-y-auto task-container space-y-3 min-h-[150px]" id="col-review"></div>
+            </div>
+
+            <!-- Coluna: Concluído -->
+            <div class="kanban-column flex flex-col bg-slate-100/80 rounded-xl w-80 max-h-full border border-slate-200 shadow-sm" data-status="done">
+                <div class="p-4 flex items-center justify-between border-b border-slate-200 shrink-0 bg-slate-100 rounded-t-xl">
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 rounded-full bg-green-500 shadow-sm"></div>
+                        <h2 class="font-semibold text-slate-700">Concluído</h2>
+                    </div>
+                    <span class="bg-white border border-slate-200 text-slate-600 text-xs font-bold px-2.5 py-1 rounded-full count-badge shadow-sm">0</span>
+                </div>
+                <div class="p-3 flex-1 overflow-y-auto task-container space-y-3 min-h-[150px]" id="col-done"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Novo/Editar Chamado -->
+    <div id="ticketModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-50 flex items-center justify-center opacity-0 transition-opacity duration-300 overflow-y-auto py-10">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 transform scale-95 transition-transform duration-300 my-auto" id="modalContent">
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white rounded-t-xl z-10">
+                <h3 class="text-xl font-bold text-slate-800" id="modalTitle">Criar Novo Chamado</h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-700 bg-slate-50 hover:bg-slate-100 w-8 h-8 rounded-full flex items-center justify-center transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            
+            <form id="ticketForm" class="p-6 space-y-5">
+                <input type="hidden" id="ticketId" value="">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div class="md:col-span-2">
+                        <label for="title" class="block text-sm font-semibold text-slate-700 mb-1">Título do Projeto <span class="text-red-500">*</span></label>
+                        <input type="text" id="title" required placeholder="Ex: Implantação do novo ERP..." 
+                               class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white outline-none transition-all">
+                    </div>
+                    
+                    <div>
+                        <label for="requester" class="block text-sm font-semibold text-slate-700 mb-1">Solicitante (Cliente) <span class="text-red-500">*</span></label>
+                        <input type="text" id="requester" required placeholder="Nome de quem pediu" 
+                               class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white outline-none transition-all">
+                    </div>
+
+                    <div>
+                        <label for="assignee" class="block text-sm font-semibold text-slate-700 mb-1">Atribuído a (Responsável) <span class="text-red-500">*</span></label>
+                        <select id="assignee" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white outline-none transition-all cursor-pointer">
+                            <option value="" disabled selected>Selecione um profissional...</option>
+                            <option value="Hugo Salles | Assistente de TI">Hugo Salles | Assistente de TI</option>
+                            <option value="João Paulo | Técnico de Suporte">João Paulo | Técnico de Suporte</option>
+                            <option value="Sergio Moreira | Gerente de Sistemas">Sergio Moreira | Gerente de Sistemas</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="urgency" class="block text-sm font-semibold text-slate-700 mb-1">Urgência <span class="text-red-500">*</span></label>
+                        <select id="urgency" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white outline-none transition-all cursor-pointer">
+                            <option value="Curta">Curta</option>
+                            <option value="Média">Média</option>
+                            <option value="Urgente">Urgente</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="sector" class="block text-sm font-semibold text-slate-700 mb-1">Setor <span class="text-red-500">*</span></label>
+                        <select id="sector" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white outline-none transition-all cursor-pointer">
+                            <option value="" disabled selected>Selecione um setor...</option>
+                            <option value="Bar">Bar</option>
+                            <option value="Contabilidade">Contabilidade</option>
+                            <option value="Departamento pessoal">Departamento pessoal</option>
+                            <option value="Esporte">Esporte</option>
+                            <option value="Financeiro">Financeiro</option>
+                            <option value="Manutenção">Manutenção</option>
+                            <option value="Marketing">Marketing</option>
+                            <option value="Outros">Outros</option>
+                            <option value="Processos">Processos</option>
+                            <option value="Produção">Produção</option>
+                            <option value="Secretaria">Secretaria</option>
+                            <option value="Social">Social</option>
+                            <option value="Tecnologia da Informação">Tecnologia da Informação</option>
+                        </select>
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label for="description" class="block text-sm font-semibold text-slate-700 mb-1">Escopo do Projeto <span class="text-red-500">*</span></label>
+                        <textarea id="description" required rows="3" placeholder="Descreva a demanda original detalhadamente..." 
+                                  class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white outline-none transition-all resize-none"></textarea>
+                    </div>
+                </div>
+
+                <div class="border-t border-slate-200 pt-5 mt-2">
+                    <h4 class="text-sm font-bold text-slate-800 mb-4 uppercase tracking-wider flex items-center"><i class="fa-solid fa-list-check mr-2 text-blue-500"></i>Acompanhamento (Opcional)</h4>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label for="complementary" class="block text-sm font-semibold text-slate-700 mb-1">Atividades Complementares / Atualizações</label>
+                            <textarea id="complementary" rows="3" placeholder="Registre subtarefas, logs ou anotações extras do dia a dia..." 
+                                      class="w-full px-4 py-2.5 bg-blue-50/50 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none"></textarea>
+                        </div>
+                        
+                        <div>
+                            <label for="delayReason" class="block text-sm font-semibold text-slate-700 mb-1">Motivo de Atraso / Impedimentos</label>
+                            <textarea id="delayReason" rows="2" placeholder="Se o chamado está bloqueado ou em atraso, explique aqui..." 
+                                      class="w-full px-4 py-2.5 bg-red-50/50 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-all resize-none"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-6 border-t border-slate-100 flex gap-3 justify-end sticky bottom-0 bg-white">
+                    <button type="button" onclick="closeModal()" class="px-5 py-2.5 text-slate-600 hover:bg-slate-100 border border-transparent hover:border-slate-200 rounded-lg font-medium transition-all">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-medium transition-all shadow-sm flex items-center gap-2">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        <span id="submitBtnText">Salvar Projeto</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Relatórios -->
+    <div id="reportsModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden z-50 flex items-center justify-center opacity-0 transition-opacity duration-300 overflow-y-auto py-10">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl mx-4 transform scale-95 transition-transform duration-300 my-auto flex flex-col max-h-[90vh]" id="reportsContent">
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-white rounded-t-xl shrink-0">
+                <h3 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-line text-blue-500"></i> Relatório de Projetos
+                </h3>
+                <button onclick="closeReportsModal()" class="text-slate-400 hover:text-slate-700 bg-slate-50 hover:bg-slate-100 w-8 h-8 rounded-full flex items-center justify-center transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto flex-1 bg-slate-50">
+                <!-- KPIs -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-center">
+                        <p class="text-sm text-slate-500 font-medium mb-1">Projetos Concluídos</p>
+                        <h4 class="text-3xl font-bold text-slate-800" id="repTotalClosed">0</h4>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-center">
+                        <p class="text-sm text-slate-500 font-medium mb-1">Tempo Médio de Solução</p>
+                        <h4 class="text-2xl font-bold text-blue-600" id="repAvgTime">-</h4>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-center">
+                        <p class="text-sm text-slate-500 font-medium mb-1">Setor que Mais Demanda</p>
+                        <h4 class="text-xl font-bold text-purple-600 truncate" id="repTopSector">-</h4>
+                    </div>
+                </div>
+
+                <!-- Tabela de Histórico -->
+                <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                    <div class="px-5 py-4 border-b border-slate-100 bg-white">
+                        <h4 class="font-bold text-slate-800">Histórico de Projetos Fechados</h4>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-600">
+                            <thead class="bg-slate-50 text-slate-500 text-xs uppercase font-semibold border-b border-slate-200">
+                                <tr>
+                                    <th class="px-5 py-3">Projeto</th>
+                                    <th class="px-5 py-3">Responsável</th>
+                                    <th class="px-5 py-3">Setor</th>
+                                    <th class="px-5 py-3">Fechamento</th>
+                                    <th class="px-5 py-3 text-right">Tempo Gasto</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reportsTableBody" class="divide-y divide-slate-100">
+                                <!-- Preenchido via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="emptyReportsState" class="hidden p-8 text-center text-slate-500">
+                        <i class="fa-solid fa-inbox text-3xl mb-3 opacity-50"></i>
+                        <p>Nenhum projeto concluído ainda.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="p-4 border-t border-slate-100 bg-white rounded-b-xl flex justify-end shrink-0">
+                <button onclick="closeReportsModal()" class="px-5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-medium transition-all">Fechar Relatório</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Confirmação -->
+    <div id="confirmModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-[60] flex items-center justify-center opacity-0 transition-opacity duration-200">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-sm mx-4 transform scale-95 transition-transform duration-200" id="confirmContent">
+            <div class="flex items-center gap-4 mb-4 text-red-600">
+                <div class="bg-red-100 p-3 rounded-full">
+                    <i class="fa-solid fa-triangle-exclamation text-xl"></i>
+                </div>
+                <h3 class="text-lg font-bold text-slate-800">Excluir projeto?</h3>
+            </div>
+            <p class="text-slate-600 text-sm mb-6">Esta ação não poderá ser desfeita. Tem certeza que deseja remover este cartão?</p>
+            <div class="flex gap-3 justify-end">
+                <button onclick="closeConfirmModal()" class="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg font-medium transition-all">Cancelar</button>
+                <button id="confirmDeleteBtn" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-all shadow-sm">Sim, excluir</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'kanban_ti_sistemas';
+        let tickets = [];
+        let draggedTicketId = null;
+        let ticketToDelete = null;
+
+        const modal = document.getElementById('ticketModal');
+        const modalContent = document.getElementById('modalContent');
+        const ticketForm = document.getElementById('ticketForm');
+        const columns = document.querySelectorAll('.kanban-column');
+        const modalTitle = document.getElementById('modalTitle');
+        const submitBtnText = document.getElementById('submitBtnText');
+        const confirmModal = document.getElementById('confirmModal');
+        const confirmContent = document.getElementById('confirmContent');
+        const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+        
+        const reportsModal = document.getElementById('reportsModal');
+        const reportsContent = document.getElementById('reportsContent');
+
+        const statusColors = {
+            todo: 'border-slate-400',
+            inprogress: 'border-blue-500',
+            review: 'border-purple-500',
+            done: 'border-green-500'
+        };
+
+        const urgencyConfig = {
+            'Curta': 'bg-emerald-100 text-emerald-800 border-emerald-200',
+            'Média': 'bg-amber-100 text-amber-800 border-amber-200',
+            'Urgente': 'bg-rose-100 text-rose-800 border-rose-200'
+        };
+
+        const userColors = {
+            'Hugo Salles | Assistente de TI': 'bg-indigo-100 text-indigo-700',
+            'João Paulo | Técnico de Suporte': 'bg-teal-100 text-teal-700',
+            'Sergio Moreira | Gerente de Sistemas': 'bg-orange-100 text-orange-700'
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTickets();
+            renderBoard();
+            setupDragAndDrop();
+        });
+
+        function loadTickets() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    tickets = JSON.parse(saved);
+                    tickets = tickets.map(t => {
+                        if (!t.openDate) t.openDate = t.date || new Date().toISOString();
+                        if (!t.assignee) t.assignee = ""; // retrocompatibilidade
+                        return t;
+                    });
+                } catch (e) {
+                    tickets = [];
+                }
+            }
+        }
+
+        function saveTickets() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(tickets));
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            const d = new Date(dateString);
+            return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth()+1).toString().padStart(2, '0')}/${d.getFullYear()}`;
+        }
+
+        function escapeHtml(unsafe) {
+            if(!unsafe) return '';
+            return unsafe
+                 .replace(/&/g, "&amp;")
+                 .replace(/</g, "&lt;")
+                 .replace(/>/g, "&gt;")
+                 .replace(/"/g, "&quot;")
+                 .replace(/'/g, "&#039;");
+        }
+
+        function getInitials(nameString) {
+            if(!nameString) return '?';
+            const name = nameString.split('|')[0].trim();
+            const parts = name.split(' ');
+            if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+            return parts[0].substring(0, 2).toUpperCase();
+        }
+
+        function getUserColor(name) {
+            return userColors[name] || 'bg-slate-200 text-slate-700';
+        }
+
+        function renderBoard() {
+            document.querySelectorAll('.task-container').forEach(container => {
+                container.innerHTML = '';
+            });
+
+            const counts = { todo: 0, inprogress: 0, review: 0, done: 0 };
+
+            tickets.forEach(ticket => {
+                const container = document.getElementById(`col-${ticket.status}`);
+                if (container) {
+                    const card = createCardElement(ticket);
+                    container.appendChild(card);
+                    counts[ticket.status]++;
+                }
+            });
+
+            document.querySelectorAll('.kanban-column').forEach(col => {
+                const status = col.dataset.status;
+                const badge = col.querySelector('.count-badge');
+                if (badge) badge.textContent = counts[status];
+            });
+        }
+
+        function createCardElement(ticket) {
+            const div = document.createElement('div');
+            
+            div.className = `task-card bg-white p-4 rounded-xl shadow border-l-[5px] ${statusColors[ticket.status]} border-y border-r border-y-slate-200 border-r-slate-200 cursor-pointer relative group flex flex-col hover:shadow-md h-full`;
+            div.draggable = true;
+            div.dataset.id = ticket.id;
+            
+            div.onclick = (e) => {
+                if(!e.target.closest('button')) {
+                    openModal(ticket.id);
+                }
+            };
+
+            const urgColor = urgencyConfig[ticket.urgency] || 'bg-slate-100 text-slate-700 border-slate-200';
+            const hasExtra = ticket.complementary;
+            const delayWarning = ticket.delayReason ? `<i class="fa-solid fa-triangle-exclamation text-red-500 text-sm" title="Impedimento: ${escapeHtml(ticket.delayReason)}"></i>` : '';
+            const extraIcon = hasExtra ? `<i class="fa-solid fa-comment-dots text-blue-400 text-sm" title="Possui anotações extras"></i>` : '';
+            
+            const assigneeName = ticket.assignee ? ticket.assignee.split('|')[0].trim() : 'Não atribuído';
+            const assigneeInitials = getInitials(ticket.assignee);
+            const assigneeColor = getUserColor(ticket.assignee);
+
+            div.innerHTML = `
+                <div class="flex justify-between items-start gap-2 mb-2">
+                    <h4 class="font-bold text-slate-800 text-sm leading-snug line-clamp-2">${escapeHtml(ticket.title)}</h4>
+                    <button onclick="triggerDelete('${ticket.id}', event)" class="text-slate-300 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-50 hover:bg-red-50 w-7 h-7 rounded flex items-center justify-center shrink-0 border border-transparent hover:border-red-100" title="Excluir">
+                        <i class="fa-regular fa-trash-can text-xs"></i>
+                    </button>
+                </div>
+                
+                <div class="flex flex-wrap gap-1.5 mb-3">
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold border ${urgColor}">${escapeHtml(ticket.urgency)}</span>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-600 border border-slate-200 truncate max-w-[140px]" title="${escapeHtml(ticket.sector)}">${escapeHtml(ticket.sector)}</span>
+                </div>
+                
+                <!-- Responsável -->
+                <div class="flex items-center gap-2 mb-3 bg-slate-50 p-1.5 rounded-lg border border-slate-100">
+                    <span class="avatar-initials w-6 h-6 text-[10px] ${assigneeColor}" title="${escapeHtml(ticket.assignee)}">${assigneeInitials}</span>
+                    <span class="text-xs font-medium text-slate-600 truncate">${escapeHtml(assigneeName)}</span>
+                </div>
+
+                <div class="flex flex-col text-xs text-slate-500 font-medium pt-3 border-t border-slate-100 mt-auto gap-2">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-1.5 truncate max-w-[130px] px-1 py-0.5" title="Solicitante: ${escapeHtml(ticket.requester)}">
+                            <i class="fa-regular fa-user text-[10px]"></i>
+                            <span class="truncate">${escapeHtml(ticket.requester)}</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            ${extraIcon}
+                            ${delayWarning}
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col gap-1 text-[10px]">
+                        <div class="flex items-center text-slate-400">
+                            <i class="fa-regular fa-calendar-plus w-4"></i>
+                            <span>Abertura: ${formatDate(ticket.openDate)}</span>
+                        </div>
+                        ${ticket.closeDate ? `
+                        <div class="flex items-center text-green-600 font-semibold">
+                            <i class="fa-regular fa-calendar-check w-4"></i>
+                            <span>Conclusão: ${formatDate(ticket.closeDate)}</span>
+                        </div>` : ''}
+                    </div>
+                </div>
+            `;
+
+            div.addEventListener('dragstart', handleDragStart);
+            div.addEventListener('dragend', handleDragEnd);
+
+            return div;
+        }
+
+        ticketForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const idInput = document.getElementById('ticketId').value;
+            const ticketData = {
+                title: document.getElementById('title').value.trim(),
+                requester: document.getElementById('requester').value.trim(),
+                assignee: document.getElementById('assignee').value,
+                urgency: document.getElementById('urgency').value,
+                sector: document.getElementById('sector').value,
+                description: document.getElementById('description').value.trim(),
+                complementary: document.getElementById('complementary').value.trim(),
+                delayReason: document.getElementById('delayReason').value.trim()
+            };
+
+            if(idInput) {
+                const index = tickets.findIndex(t => t.id === idInput);
+                if(index > -1) {
+                    tickets[index] = { ...tickets[index], ...ticketData };
+                }
+            } else {
+                const newTicket = {
+                    id: 'tk-' + Math.random().toString(36).substr(2, 9),
+                    ...ticketData,
+                    status: 'todo',
+                    openDate: new Date().toISOString(),
+                    closeDate: null 
+                };
+                tickets.push(newTicket);
+            }
+
+            saveTickets();
+            renderBoard();
+            closeModal();
+        });
+
+        // Modais de Criação
+        window.openModal = function(ticketId = null) {
+            ticketForm.reset();
+            
+            if (ticketId) {
+                const ticket = tickets.find(t => t.id === ticketId);
+                if(ticket) {
+                    modalTitle.innerHTML = `<i class="fa-regular fa-pen-to-square mr-2 text-blue-500"></i>Editar Projeto`;
+                    submitBtnText.textContent = "Salvar Alterações";
+                    
+                    document.getElementById('ticketId').value = ticket.id;
+                    document.getElementById('title').value = ticket.title;
+                    document.getElementById('requester').value = ticket.requester;
+                    document.getElementById('assignee').value = ticket.assignee || '';
+                    document.getElementById('urgency').value = ticket.urgency;
+                    document.getElementById('sector').value = ticket.sector;
+                    document.getElementById('description').value = ticket.description;
+                    document.getElementById('complementary').value = ticket.complementary || '';
+                    document.getElementById('delayReason').value = ticket.delayReason || '';
+                }
+            } else {
+                modalTitle.innerHTML = `<i class="fa-solid fa-plus mr-2 text-blue-500"></i>Criar Novo Projeto`;
+                submitBtnText.textContent = "Criar Projeto";
+                document.getElementById('ticketId').value = '';
+                document.getElementById('urgency').value = 'Média';
+            }
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modalContent.classList.remove('scale-95');
+            }, 10);
+        };
+
+        window.closeModal = function() {
+            modal.classList.add('opacity-0');
+            modalContent.classList.add('scale-95');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        };
+
+        // Exclusão Segura
+        window.triggerDelete = function(id, event) {
+            event.stopPropagation();
+            ticketToDelete = id;
+            confirmModal.classList.remove('hidden');
+            setTimeout(() => {
+                confirmModal.classList.remove('opacity-0');
+                confirmContent.classList.remove('scale-95');
+            }, 10);
+        };
+
+        window.closeConfirmModal = function() {
+            confirmModal.classList.add('opacity-0');
+            confirmContent.classList.add('scale-95');
+            setTimeout(() => {
+                confirmModal.classList.add('hidden');
+                ticketToDelete = null;
+            }, 200);
+        };
+
+        confirmDeleteBtn.addEventListener('click', () => {
+            if (ticketToDelete) {
+                tickets = tickets.filter(t => t.id !== ticketToDelete);
+                saveTickets();
+                renderBoard();
+            }
+            closeConfirmModal();
+        });
+
+        // ----------------------------------------------------
+        // LÓGICA DE RELATÓRIOS
+        // ----------------------------------------------------
+        function calculateTimeDifference(startStr, endStr) {
+            const start = new Date(startStr);
+            const end = new Date(endStr);
+            const diffMs = end - start;
+            
+            const diffHours = diffMs / (1000 * 60 * 60);
+            if(diffHours < 24) {
+                return `${Math.max(1, Math.round(diffHours))} horas`;
+            } else {
+                const diffDays = diffHours / 24;
+                return `${Math.round(diffDays)} dias`;
+            }
+        }
+
+        function getDiffHours(startStr, endStr) {
+            return (new Date(endStr) - new Date(startStr)) / (1000 * 60 * 60);
+        }
+
+        window.openReportsModal = function() {
+            // Gerar dados
+            const allTickets = tickets;
+            const closedTickets = tickets.filter(t => t.status === 'done' && t.closeDate);
+            
+            // 1. Total Closed
+            document.getElementById('repTotalClosed').textContent = closedTickets.length;
+
+            // 2. Tempo Médio (apenas para fechados)
+            if(closedTickets.length > 0) {
+                let totalHours = 0;
+                closedTickets.forEach(t => {
+                    totalHours += getDiffHours(t.openDate, t.closeDate);
+                });
+                const avgHours = totalHours / closedTickets.length;
+                if(avgHours < 24) {
+                    document.getElementById('repAvgTime').textContent = `${Math.round(avgHours)}h`;
+                } else {
+                    document.getElementById('repAvgTime').textContent = `${Math.round(avgHours/24)} dias`;
+                }
+            } else {
+                document.getElementById('repAvgTime').textContent = '-';
+            }
+
+            // 3. Setor que mais demanda (conta sobre TODOS os chamados)
+            if(allTickets.length > 0) {
+                const sectorCounts = {};
+                allTickets.forEach(t => {
+                    sectorCounts[t.sector] = (sectorCounts[t.sector] || 0) + 1;
+                });
+                const topSector = Object.keys(sectorCounts).reduce((a, b) => sectorCounts[a] > sectorCounts[b] ? a : b);
+                document.getElementById('repTopSector').textContent = topSector;
+            } else {
+                document.getElementById('repTopSector').textContent = '-';
+            }
+
+            // 4. Preencher Tabela de Histórico
+            const tbody = document.getElementById('reportsTableBody');
+            const emptyState = document.getElementById('emptyReportsState');
+            tbody.innerHTML = '';
+            
+            if(closedTickets.length === 0) {
+                emptyState.classList.remove('hidden');
+                tbody.parentElement.classList.add('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+                tbody.parentElement.classList.remove('hidden');
+                
+                // Ordenar por data de fechamento mais recente
+                closedTickets.sort((a, b) => new Date(b.closeDate) - new Date(a.closeDate)).forEach(t => {
+                    const assigneeName = t.assignee ? t.assignee.split('|')[0].trim() : 'Sem atribuição';
+                    const timeSpent = calculateTimeDifference(t.openDate, t.closeDate);
+                    
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-50/50 transition-colors";
+                    tr.innerHTML = `
+                        <td class="px-5 py-3">
+                            <div class="font-medium text-slate-800 line-clamp-1" title="${escapeHtml(t.title)}">${escapeHtml(t.title)}</div>
+                        </td>
+                        <td class="px-5 py-3 whitespace-nowrap">${escapeHtml(assigneeName)}</td>
+                        <td class="px-5 py-3 whitespace-nowrap">
+                            <span class="bg-slate-100 text-slate-600 px-2 py-1 rounded text-xs">${escapeHtml(t.sector)}</span>
+                        </td>
+                        <td class="px-5 py-3 whitespace-nowrap">${formatDate(t.closeDate)}</td>
+                        <td class="px-5 py-3 text-right whitespace-nowrap font-medium text-slate-700">${timeSpent}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            reportsModal.classList.remove('hidden');
+            setTimeout(() => {
+                reportsModal.classList.remove('opacity-0');
+                reportsContent.classList.remove('scale-95');
+            }, 10);
+        }
+
+        window.closeReportsModal = function() {
+            reportsModal.classList.add('opacity-0');
+            reportsContent.classList.add('scale-95');
+            setTimeout(() => reportsModal.classList.add('hidden'), 300);
+        }
+
+        // Click outside modals
+        window.addEventListener('mousedown', (e) => {
+            if(e.target === modal) closeModal();
+            if(e.target === reportsModal) closeReportsModal();
+        });
+
+        // ----------------------------------------------------
+        // Lógica de Drag and Drop
+        // ----------------------------------------------------
+        function handleDragStart(e) {
+            draggedTicketId = this.dataset.id;
+            this.classList.add('sortable-ghost');
+            if (e.dataTransfer) {
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', this.dataset.id);
+            }
+        }
+
+        function handleDragEnd(e) {
+            this.classList.remove('sortable-ghost');
+            columns.forEach(col => col.classList.remove('drag-over'));
+            draggedTicketId = null;
+        }
+
+        function setupDragAndDrop() {
+            columns.forEach(column => {
+                column.addEventListener('dragover', e => {
+                    e.preventDefault(); 
+                    if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+                    column.classList.add('drag-over');
+                });
+
+                column.addEventListener('dragleave', e => {
+                    if (!column.contains(e.relatedTarget)) column.classList.remove('drag-over');
+                });
+
+                column.addEventListener('drop', e => {
+                    e.preventDefault();
+                    column.classList.remove('drag-over');
+                    const newStatus = column.dataset.status;
+                    if (draggedTicketId) {
+                        const ticketIndex = tickets.findIndex(t => t.id === draggedTicketId);
+                        if (ticketIndex > -1 && tickets[ticketIndex].status !== newStatus) {
+                            if (newStatus === 'done') {
+                                tickets[ticketIndex].closeDate = new Date().toISOString();
+                            } else {
+                                tickets[ticketIndex].closeDate = null;
+                            }
+                            tickets[ticketIndex].status = newStatus;
+                            saveTickets();
+                            renderBoard();
+                        }
+                    }
+                });
+            });
+        }
+    </script>
+</body>
+</html>
